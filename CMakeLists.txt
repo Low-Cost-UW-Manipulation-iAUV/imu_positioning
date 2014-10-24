@@ -25,6 +25,9 @@ catkin_package(
 	CATKIN_DEPENDS 
 	message_runtime
 	roscpp
+	std_msgs
+	sensor_msgs
+	geometry_msgs
 
 	INCLUDE_DIRS include
 )

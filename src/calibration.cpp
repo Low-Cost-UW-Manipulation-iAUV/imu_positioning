@@ -6,8 +6,9 @@ namespace useful_code {
 calibration::calibration(unsigned int num_o) {
     num_of_samples = num_o;
     last_time = ros::Time::now();
-    data.clear();
-    data.resize(num_of_samples,0);
+    stored_data.clear();
+    stored_data.reserve(num_of_samples);
+
     current_position = 0;
 
     deadband_multiplier = 1;
@@ -19,8 +20,7 @@ calibration::calibration(unsigned int num_o) {
 calibration::calibration(void) {
     num_of_samples = 1000; // FIXME
     last_time = ros::Time::now();
-    data.clear();
-    data.resize(num_of_samples,0);
+    stored_data.clear();
     current_position = 0;
 
     deadband_multiplier = 1;
@@ -31,8 +31,8 @@ calibration::calibration(void) {
 
 void calibration::reset(void) {
     last_time = ros::Time::now();
-    data.clear();
-    data.resize(num_of_samples,0);
+    stored_data.clear();
+
     current_position = 0;
 
     deadband_multiplier = 1;
@@ -44,8 +44,9 @@ void calibration::reset(void) {
 void calibration::reset(unsigned int num_o) {
     num_of_samples = num_o;    
     last_time = ros::Time::now();
-    data.clear();
-    data.resize(num_of_samples,0);
+    stored_data.clear();
+    stored_data.reserve(num_of_samples);
+
     current_position = 0;
 
     deadband_multiplier = 1;
@@ -58,37 +59,19 @@ calibration::~calibration() {}
 
 bool calibration::is_calibration_done(void) {
     // are we done yet?
-    if ( (current_position + 1) >= data.size()) {
-     return EXIT_SUCCESS;   
+    if ( (current_position + 1) >= num_of_samples) {
+     return true;   
     } 
-    return EXIT_FAILURE;
+    return false;
 }
 
-int calibration::put_in(const double new_data) {
-   if (current_position < num_of_samples) {     //we are within the allocated calibration time
-        data[current_position] = new_data;
-        current_position ++;
-                /*
-        Placeholder for handling time here..
-                */
-        offset = mean(data);
-        standard_deviation = std2(data, offset);   
-        deadband = standard_deviation * deadband_multiplier;
+int calibration::put_in( double new_data) {
+    stored_data.push_back(new_data);
+    current_position ++;
 
-        return EXIT_SUCCESS;        
-    } else {                                    //we are outside the planned calibration time.
-        data.push_back(new_data);
-        current_position ++;
-                /*
-        Placeholder for handling time here..
-                */
-        offset = mean(data);
-        standard_deviation = std2(data, offset); 
-        deadband = standard_deviation * deadband_multiplier;
-
-        return EXIT_FAILURE;                
-    }
-
+    offset = mean(stored_data);
+    standard_deviation = std2(stored_data, offset);   
+    deadband = standard_deviation * deadband_multiplier;
 }
 
 double calibration::get_offset(void) {
@@ -109,26 +92,28 @@ void calibration::set_deadband_width_multiplication(double mply) {
 
 /** mean(): calculates the mean
 */
-double calibration::mean(const std::vector<double>& vec) {
-    double sum(0);
-    unsigned int size(0);
-    for (typename std::vector<double>::const_iterator it = vec.begin(); it!=vec.end(); ++it,++size) { 
+double calibration::mean(const std::vector<double> vec) {
+    double sum = 0;
+    unsigned int size = 0;
+    for (typename std::vector<double>::const_iterator it = vec.begin(); it!=vec.end(); ++it, ++size) { 
         sum += (*it);
         // if size is not == 0, divide by size, else return 0
-        return (size)?(sum/size):0;
     }
+    return (size)?(sum/size):0;
 }
 
 /** std2(): find the std_deviation across our current_range
 */
-double calibration::std2(const std::vector<double>& vec, const double mean) {
-    double sum(0);
-    unsigned int size(0);
-    for(typename std::vector<double>::const_iterator it = vec.begin(); it != vec.end(); ++it, ++size) {
+double calibration::std2(const std::vector<double> vec, const double mean) {
+    double sum = 0;
+    unsigned int size = 0;
+    for(typename std::vector<double>::const_iterator it = vec.begin(); it != vec.end(); ++it) {
         sum+=std::pow(((*it) - mean),2);
-        // if size is not == 0, divide by size, else return 0            
-        return size?std::sqrt(sum/size):-1;
+         ++size;
     }
+    // if size is not == 0, divide by size, else return 0            
+    return size?std::sqrt(sum/size):-1;
+    
 } 
 }  //end of namespace
 

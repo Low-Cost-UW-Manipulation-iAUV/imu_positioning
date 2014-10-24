@@ -41,7 +41,7 @@ void integration::put_in(const double new_data, const ros::Time current_time) {
     double data_offset = do_offset(new_data);
     double data_dbed = apply_deadband(data_offset);
     acc_to_vel.integrate(data_dbed, time_passed, &data_dt);
-    double data_zeroed = zero_velocity_detection(data_dt, new_data);
+    double data_zeroed = zero_velocity_detection(data_dt, data_dbed);
     vel_to_pos.integrate(data_zeroed, time_passed, &output);
 
 }
@@ -86,6 +86,7 @@ double integration::zero_velocity_detection(const double data_dt, const double d
 
     // keep track of how many times in sequence the input to the class was 0
     if (data == 0) {
+
         zero_input_counter ++;
     } else {
         zero_input_counter = 0;
@@ -93,6 +94,7 @@ double integration::zero_velocity_detection(const double data_dt, const double d
 
     // if we are above our threshold, set the to 0
     if (zero_input_counter >= zero_velocity_precision) {
+
         return 0;
     } else {
         return data_dt;

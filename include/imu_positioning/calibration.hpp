@@ -19,7 +19,7 @@ class calibration {
 
         bool is_calibration_done(void);
 
-        int put_in(const double);
+        int put_in(double);
 //        int set_calibration_length(unsigned int);
 //        int set_calibration_length(timestamp time);
         void set_deadband_width_multiplication(double);
@@ -31,10 +31,10 @@ class calibration {
 
     private:
 
-        double mean(const std::vector<double>&);
-        double std2(const std::vector<double>&, const double mean);
+        double mean(const std::vector<double>);
+        double std2(const std::vector<double>, const double mean);
         ros::Time last_time;
-        std::vector<double> data;
+        std::vector<double> stored_data;
         unsigned int current_position;
 
         double deadband_multiplier;

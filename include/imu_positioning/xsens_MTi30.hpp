@@ -13,14 +13,14 @@
 #include "imu_positioning/xsens_MTi.h"
 #include "imu_positioning/sensor_integration.hpp"
 #include "imu_positioning/calibration.hpp"
-
+#include "sensor_msgs/Imu.h"
 namespace imu_positioning {
     class xsens {
     public:
         xsens(const ros::NodeHandle&);
         ~xsens();
 
-        void imu_callback(const imu_positioning::xsens_MTi::ConstPtr&);
+        void imu_callback(const sensor_msgs::Imu::ConstPtr&);
 
     private:
         /// DOF feedback subscribers
@@ -40,6 +40,10 @@ namespace imu_positioning {
         bool x_calibrated;
         bool y_calibrated;
         bool z_calibrated;
+
+        double deadband_mult;
+        unsigned int zero_vel_precision;
+        unsigned int counter;
 
 
     };
