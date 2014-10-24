@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <name>imu_positioning</name>
+  <version>0.1.0</version>
+  <description>Dead Reckoning positioning from IMUs</description>
+
+  <maintainer email="you@yourdomain.tld">Raphael Nagel</maintainer>
+  <license>BSD</license>
+  <url type="website">https://github.com/Low-Cost-UW-Manipulation-iAUV</url>
+  <author email="first.lastname@posteo.de">Raphael Nagel</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>  
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <run_depend>message_runtime</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>  
+  <run_depend>geometry_msgs</run_depend>  
+
+</package>
