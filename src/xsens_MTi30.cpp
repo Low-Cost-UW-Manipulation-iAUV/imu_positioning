@@ -12,7 +12,7 @@ xsens::xsens(const ros::NodeHandle &nh ) {
     nh_ = nh;
 
     sub_imu = nh_.subscribe<sensor_msgs::Imu>("imu/data",1, &xsens::imu_callback, this);
-    unsigned int  number_of_samples = 1000;
+    unsigned int  number_of_samples = 12000;
     calibration_x.reset(number_of_samples);
     calibration_y.reset(number_of_samples);
     calibration_z.reset(number_of_samples);
@@ -25,9 +25,9 @@ xsens::xsens(const ros::NodeHandle &nh ) {
     integrate_y.reset();
     integrate_z.reset();
 
-    integrate_x.set_zero_vel_precision(3);
-    integrate_y.set_zero_vel_precision(3);
-    integrate_z.set_zero_vel_precision(3);
+    integrate_x.set_zero_vel_precision(20);
+    integrate_y.set_zero_vel_precision(20);
+    integrate_z.set_zero_vel_precision(20);
 
     x_calibrated = false;
     y_calibrated = false;
