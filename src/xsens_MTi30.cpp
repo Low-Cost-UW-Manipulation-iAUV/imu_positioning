@@ -21,9 +21,9 @@ xsens::xsens(const ros::NodeHandle &nh ) {
     calibration_y.set_deadband_width_multiplication(3);
     calibration_z.set_deadband_width_multiplication(3);
 
-    integrate_x.reset();
-    integrate_y.reset();
-    integrate_z.reset();
+    integrate_x.reset(400);
+    integrate_y.reset(400);
+    integrate_z.reset(400);
 
     integrate_x.set_zero_vel_precision(20);
     integrate_y.set_zero_vel_precision(20);
@@ -44,7 +44,7 @@ void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
 
     // if the axis is calibrated just integrate.
     if(x_calibrated == true) {
-        integrate_x.put_in(message->linear_acceleration.x, message->header.stamp);
+        integrate_x.put_in(message->linear_acceleration.x, message->header.seq);
         // fill the message.
         send_me.x = integrate_x.get_out();
     } else { //if not calibrate...
@@ -62,7 +62,7 @@ void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
     } 
 
     if(y_calibrated == true) {
-        integrate_y.put_in(message->linear_acceleration.y, message->header.stamp);
+        integrate_y.put_in(message->linear_acceleration.y, message->header.seq);
         // fill the message.
         send_me.y = integrate_y.get_out();
     } else { //if not calibrate...
@@ -78,7 +78,7 @@ void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
         }
     }     
     if(z_calibrated == true) {
-        integrate_z.put_in(message->linear_acceleration.z, message->header.stamp);
+        integrate_z.put_in(message->linear_acceleration.z, message->header.seq);
         // fill the message.
         send_me.z = integrate_z.get_out();
     } else { //if not calibrate...

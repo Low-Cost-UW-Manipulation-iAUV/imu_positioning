@@ -4,8 +4,9 @@
 namespace useful_code {
 
 integration::integration() {
+    frequency = 400;
     output = 0;
-    last_time = ros::Time::now();
+    last_one = 0;
 
     deadband = 0;
     zero_velocity_precision = 0;
@@ -16,11 +17,23 @@ integration::integration() {
     vel_to_pos.reset();
 }
 
+integration::integration(const double freq) {
+    frequency = freq;
+    output = 0;
+
+    deadband = 0;
+    zero_velocity_precision = 0;
+    zero_input_counter = 0;
+    
+    offset = 0;
+    acc_to_vel.reset();
+    vel_to_pos.reset();
+}
 integration::~integration() {}
 
 void integration::reset(void) {
+    frequency = 400;
     output = 0;
-    last_time = ros::Time::now();
 
     deadband = 0;
     zero_velocity_precision = 0;
@@ -31,10 +44,24 @@ void integration::reset(void) {
     vel_to_pos.reset();
 }
 
-void integration::put_in(const double new_data, const ros::Time current_time) {
+void integration::reset(const double freq) {
+    output = 0;
+    frequency = freq;
+
+    deadband = 0;
+    zero_velocity_precision = 0;
+    zero_input_counter = 0;
     
-    ros::Duration time_passed = current_time - last_time;
-    last_time = current_time;
+    offset = 0;
+    acc_to_vel.reset();
+    vel_to_pos.reset();
+}
+
+void integration::put_in(const double new_data, const int sequence) {
+    if(sequence > last_one) {
+        ros::Duration time_passed = ros::Duration((sequence - last_one)/frequency);
+        last_one = sequence;
+ //ROS_INFO("sensor_integration: cycles skipped: %u", (sequence - last_one));
 
     double data_dt = 0;
 
@@ -42,7 +69,11 @@ void integration::put_in(const double new_data, const ros::Time current_time) {
     double data_dbed = apply_deadband(data_offset);
     acc_to_vel.integrate(data_dbed, time_passed, &data_dt);
     double data_zeroed = zero_velocity_detection(data_dt, data_dbed);
-    vel_to_pos.integrate(data_zeroed, time_passed, &output);
+    vel_to_pos.integrate(data_zeroed, time_passed, &output);        
+
+} 
+
+   
 
 }
 

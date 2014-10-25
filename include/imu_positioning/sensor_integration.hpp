@@ -8,11 +8,14 @@ namespace useful_code {
 class integration {
     public:
         integration();
+        integration(const double);
+
         ~integration();
 
         void reset(void);
+        void reset(const double);
 
-        void put_in(const double, const ros::Time);
+        void put_in(const double, const int);
         double get_out(void);
 
         void set_offset(double);
@@ -24,14 +27,14 @@ class integration {
         double zero_velocity_detection(const double, const double);
         double do_offset(const double);
         double output;
-        ros::Time last_time;
-
+        int last_one;
         double offset;
         double deadband;
         unsigned int zero_velocity_precision;
         unsigned int zero_input_counter;
         trapezoid_integration acc_to_vel;
         trapezoid_integration vel_to_pos;
+        double frequency;
 };
 
 } //End of namespace
