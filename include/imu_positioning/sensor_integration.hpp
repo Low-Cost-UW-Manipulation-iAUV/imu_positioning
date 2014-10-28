@@ -17,6 +17,10 @@ class integration {
 
         void put_in(const double, const int);
         double get_out(void);
+        double get_out_deadbanded(void);
+        double get_out_velocity(void);
+        double get_out_velocity_zero_detect(void);
+
 
         void set_offset(double);
         void set_deadband(double);
@@ -27,6 +31,10 @@ class integration {
         double zero_velocity_detection(const double, const double);
         double do_offset(const double);
         double output;
+        double data_dt;
+        double data_offset;
+        double data_dbed;
+        double data_zeroed;
         int last_one;
         double offset;
         double deadband;

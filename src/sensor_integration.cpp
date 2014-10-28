@@ -6,6 +6,11 @@ namespace useful_code {
 integration::integration() {
     frequency = 400;
     output = 0;
+    data_dt = 0;
+    data_dbed = 0;
+    data_zeroed = 0;
+    data_offset = 0;
+
     last_one = 0;
 
     deadband = 0;
@@ -20,6 +25,10 @@ integration::integration() {
 integration::integration(const double freq) {
     frequency = freq;
     output = 0;
+    data_dt = 0;    
+    data_dbed = 0;
+    data_zeroed = 0;
+    data_offset = 0;
 
     deadband = 0;
     zero_velocity_precision = 0;
@@ -34,6 +43,10 @@ integration::~integration() {}
 void integration::reset(void) {
     frequency = 400;
     output = 0;
+    data_dt = 0;
+    data_dbed = 0;
+    data_zeroed = 0;
+    data_offset = 0;
 
     deadband = 0;
     zero_velocity_precision = 0;
@@ -47,6 +60,10 @@ void integration::reset(void) {
 void integration::reset(const double freq) {
     output = 0;
     frequency = freq;
+    data_dt = 0;
+    data_dbed = 0;
+    data_zeroed = 0;
+    data_offset = 0;
 
     deadband = 0;
     zero_velocity_precision = 0;
@@ -61,24 +78,30 @@ void integration::put_in(const double new_data, const int sequence) {
     if(sequence > last_one) {
         ros::Duration time_passed = ros::Duration((sequence - last_one)/frequency);
         last_one = sequence;
- //ROS_INFO("sensor_integration: cycles skipped: %u", (sequence - last_one));
+        //ROS_INFO("sensor_integration: cycles skipped: %u", (sequence - last_one));
 
-    double data_dt = 0;
-
-    double data_offset = do_offset(new_data);
-    double data_dbed = apply_deadband(data_offset);
-    acc_to_vel.integrate(data_dbed, time_passed, &data_dt);
-    double data_zeroed = zero_velocity_detection(data_dt, data_dbed);
-    vel_to_pos.integrate(data_zeroed, time_passed, &output);        
-
-} 
-
-   
-
+        data_offset = do_offset(new_data);
+        data_dbed = apply_deadband(data_offset);
+        acc_to_vel.integrate(data_dbed, time_passed, &data_dt);
+        data_zeroed = zero_velocity_detection(data_dt, data_dbed);
+        vel_to_pos.integrate(data_zeroed, time_passed, &output);        
+    } 
 }
 
 double integration::get_out(void) {
     return output;
+}
+
+double integration::get_out_deadbanded(void) {
+    return data_dbed;
+}
+
+double integration::get_out_velocity(void) {
+    return data_dt;
+}
+
+double integration::get_out_velocity_zero_detect(void) {
+    return data_zeroed;
 }
 
 void integration::set_deadband(const double d_band) {

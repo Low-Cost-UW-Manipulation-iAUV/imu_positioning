@@ -29,6 +29,10 @@ namespace imu_positioning {
         /// DOF feedback subscribers
         ros::Subscriber sub_imu;
         ros::Publisher pubber;
+        ros::Publisher pubber_dbed;
+        ros::Publisher pubber_vel;
+        ros::Publisher pubber_vel_zeroed;
+
         ros::ServiceServer reset_integration_service;
         void get_parameters(void);
 
