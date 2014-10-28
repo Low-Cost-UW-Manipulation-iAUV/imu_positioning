@@ -10,30 +10,34 @@ namespace imu_positioning {
 
 xsens::xsens(const ros::NodeHandle &nh ) {
     nh_ = nh;
+    get_parameters();
 
-    sub_imu = nh_.subscribe<sensor_msgs::Imu>("imu/data",1, &xsens::imu_callback, this);
-    unsigned int  number_of_samples = 12000;
-    calibration_x.reset(number_of_samples);
-    calibration_y.reset(number_of_samples);
-    calibration_z.reset(number_of_samples);
 
-    calibration_x.set_deadband_width_multiplication(3);
-    calibration_y.set_deadband_width_multiplication(3);
-    calibration_z.set_deadband_width_multiplication(3);
 
-    integrate_x.reset(400);
-    integrate_y.reset(400);
-    integrate_z.reset(400);
+    calibration_x.reset(number_of_samples[0]);
+    calibration_y.reset(number_of_samples[1]);
+    calibration_z.reset(number_of_samples[2]);
 
-    integrate_x.set_zero_vel_precision(20);
-    integrate_y.set_zero_vel_precision(20);
-    integrate_z.set_zero_vel_precision(20);
+    calibration_x.set_deadband_width_multiplication(deadband_width_multi[0]);
+    calibration_y.set_deadband_width_multiplication(deadband_width_multi[1]);
+    calibration_z.set_deadband_width_multiplication(deadband_width_multi[2]);
+
+    integrate_x.reset(base_frequency);
+    integrate_y.reset(base_frequency);
+    integrate_z.reset(base_frequency);
+
+    integrate_x.set_zero_vel_precision(detect_zero_precision[0]);
+    integrate_y.set_zero_vel_precision(detect_zero_precision[1]);
+    integrate_z.set_zero_vel_precision(detect_zero_precision[2]);
 
     x_calibrated = false;
     y_calibrated = false;
     z_calibrated = false;
     counter = 0;
-    pubber = nh_.advertise<geometry_msgs::Vector3>("imu/position", 1000);        
+
+    pubber = nh_.advertise<geometry_msgs::Vector3>("imu/position", 1000);  
+    reset_integration_service = nh_.advertiseService("reset_integration", &xsens::reset_integration, this);
+    sub_imu = nh_.subscribe<sensor_msgs::Imu>("imu/data",1, &xsens::imu_callback, this);
 
 }
 
@@ -94,11 +98,85 @@ void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
         }
     } 
         counter ++;
-        // send the message off.
-        pubber.publish(send_me);
+        // send the message off if any of them is calibrated...
+        if (z_calibrated || y_calibrated || x_calibrated) {
+            pubber.publish(send_me);
+
+        }
+}
+bool xsens::reset_integration(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res) {
+    integrate_x.reset(base_frequency);
+    integrate_y.reset(base_frequency);
+    integrate_z.reset(base_frequency);
+
+    integrate_x.set_zero_vel_precision(detect_zero_precision[0]);
+    integrate_y.set_zero_vel_precision(detect_zero_precision[1]);
+    integrate_z.set_zero_vel_precision(detect_zero_precision[2]);
+
+    integrate_x.set_offset( calibration_x.get_offset() );     
+    integrate_y.set_offset( calibration_y.get_offset() );            
+    integrate_z.set_offset( calibration_z.get_offset() );            
+
+    integrate_x.set_deadband( calibration_x.get_deadband() ); 
+    integrate_y.set_deadband( calibration_y.get_deadband() ); 
+    integrate_z.set_deadband( calibration_z.get_deadband() ); 
+    ROS_INFO("imu_positioning - xsens: reset integration to base frequency %f, detect_zero_precision to [x,y,z]: %d, %d, %d and rewrote the offset and deadband from stored calibration",base_frequency,detect_zero_precision[0], detect_zero_precision[1], detect_zero_precision[2]);
 }
 
 
+void xsens::get_parameters(void) {
+
+
+    if (!nh_.getParam("/imu_positioning/base_frequency", base_frequency)) {
+        ROS_ERROR("imu_positioning - xsens: couldnt find base_frequency, assuming 400");
+        base_frequency = 400;
+
+      nh_.setParam("/imu_positioning/base_frequency", base_frequency);
+    } else {
+      ROS_INFO("imu_positioning - xsens: base_frequency is %f Hz", base_frequency);
+    }
+
+    number_of_samples.clear();
+    number_of_samples.resize(3,0);
+    if (!nh_.getParam("/imu_positioning/number_of_samples", number_of_samples)) {
+        ROS_ERROR("imu_positioning - xsens: couldnt find number_of_samples, assuming 12000");
+        number_of_samples[0] = 12000;
+        number_of_samples[1] = 12000;
+        number_of_samples[2] = 12000;
+
+      nh_.setParam("/imu_positioning/number_of_samples", number_of_samples);
+    } else {
+      ROS_INFO("imu_positioning - xsens: number_of_samples is [x,y,z]: %d, %d, %d", number_of_samples[0],number_of_samples[1],number_of_samples[2]);
+    }    
+
+    deadband_width_multi.clear();
+    deadband_width_multi.resize(3,0);
+    if (!nh_.getParam("/imu_positioning/deadband_width_multi", deadband_width_multi)) {
+        ROS_ERROR("imu_positioning - xsens: couldnt find deadband_width_multi, assuming 3");
+        deadband_width_multi[0] = 3;
+        deadband_width_multi[1] = 3;
+        deadband_width_multi[2] = 3;
+
+
+      nh_.setParam("/imu_positioning/deadband_width_multi", deadband_width_multi);
+    } else {
+      ROS_INFO("imu_positioning - xsens: deadband_width_multi is [x,y,z]: %f,%f,%f", deadband_width_multi[0],deadband_width_multi[1],deadband_width_multi[2]);
+    }  
+
+    detect_zero_precision.clear();
+    detect_zero_precision.resize(3,0);
+    if (!nh_.getParam("/imu_positioning/detect_zero_precision", detect_zero_precision)) {
+        ROS_ERROR("imu_positioning - xsens: couldnt find detect_zero_precision, assuming 20");
+        detect_zero_precision[0] = 20;
+        detect_zero_precision[1] = 20;
+        detect_zero_precision[2] = 20;
+
+
+      nh_.setParam("/imu_positioning/detect_zero_precision", detect_zero_precision);
+    } else {
+      ROS_INFO("imu_positioning - xsens: detect_zero_precision is for DOF x: %u, y: %u, z: %u",detect_zero_precision[0],detect_zero_precision[1],detect_zero_precision[2]);
+    }
+}
 
 }  // end of namespace
 
@@ -118,6 +196,6 @@ int main(int argc, char **argv) {
     // register the 
     ros::spin();
 
-
     ROS_INFO("imu_positioning: Shutting down ");
+
 }

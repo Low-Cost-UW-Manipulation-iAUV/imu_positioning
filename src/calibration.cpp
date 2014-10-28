@@ -3,7 +3,7 @@
 #include <cmath>
 namespace useful_code {
 
-calibration::calibration(unsigned int num_o) {
+calibration::calibration(int num_o) {
     num_of_samples = num_o;
     last_time = ros::Time::now();
     stored_data.clear();
@@ -41,7 +41,7 @@ void calibration::reset(void) {
     deadband = 0;
 }
 
-void calibration::reset(unsigned int num_o) {
+void calibration::reset(int num_o) {
     num_of_samples = num_o;    
     last_time = ros::Time::now();
     stored_data.clear();
@@ -60,6 +60,9 @@ calibration::~calibration() {}
 bool calibration::is_calibration_done(void) {
     // are we done yet?
     if ( (current_position + 1) >= num_of_samples) {
+        offset = mean(stored_data);
+        standard_deviation = std2(stored_data, offset);   
+        deadband = standard_deviation * deadband_multiplier;        
      return true;   
     } 
     return false;
@@ -69,9 +72,7 @@ int calibration::put_in( double new_data) {
     stored_data.push_back(new_data);
     current_position ++;
 
-    offset = mean(stored_data);
-    standard_deviation = std2(stored_data, offset);   
-    deadband = standard_deviation * deadband_multiplier;
+
 }
 
 double calibration::get_offset(void) {

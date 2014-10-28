@@ -8,14 +8,14 @@ namespace useful_code {
 class calibration {
 	public:
         // start with number of samples data to calibrate for.
-        calibration(unsigned int);
+        calibration(int);
         calibration(void);
 
         // start with time to calibrate for
         ~calibration();
         
         void reset(void);
-        void reset(unsigned int);
+        void reset(int);
 
         bool is_calibration_done(void);
 
@@ -42,7 +42,7 @@ class calibration {
         double offset;
         double standard_deviation;
         double deadband;
-        unsigned int num_of_samples;
+        int num_of_samples;
 };
 
 

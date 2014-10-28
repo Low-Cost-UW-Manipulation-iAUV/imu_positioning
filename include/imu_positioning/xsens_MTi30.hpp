@@ -14,6 +14,8 @@
 #include "imu_positioning/sensor_integration.hpp"
 #include "imu_positioning/calibration.hpp"
 #include "sensor_msgs/Imu.h"
+#include "std_srvs/Empty.h"
+
 namespace imu_positioning {
     class xsens {
     public:
@@ -21,11 +23,15 @@ namespace imu_positioning {
         ~xsens();
 
         void imu_callback(const sensor_msgs::Imu::ConstPtr&);
+        bool reset_integration(std_srvs::Empty::Request &, std_srvs::Empty::Response &);
 
     private:
         /// DOF feedback subscribers
         ros::Subscriber sub_imu;
         ros::Publisher pubber;
+        ros::ServiceServer reset_integration_service;
+        void get_parameters(void);
+
 
         ros::NodeHandle nh_;
 
@@ -41,9 +47,12 @@ namespace imu_positioning {
         bool y_calibrated;
         bool z_calibrated;
 
-        double deadband_mult;
-        unsigned int zero_vel_precision;
         unsigned int counter;
+// to be taken from the parameter server
+        double base_frequency;
+        std::vector<int> detect_zero_precision;
+        std::vector<int>  number_of_samples;
+        std::vector<double> deadband_width_multi;
 
 
     };
