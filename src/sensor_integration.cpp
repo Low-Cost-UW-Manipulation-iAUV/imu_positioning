@@ -84,7 +84,8 @@ void integration::put_in(const double new_data, const int sequence) {
         data_dbed = apply_deadband(data_offset);
         acc_to_vel.integrate(data_dbed, time_passed, &data_dt);
         data_zeroed = zero_velocity_detection(data_dt, data_dbed);
-        vel_to_pos.integrate(data_zeroed, time_passed, &output);        
+        // Velocity output only
+        // vel_to_pos.integrate(data_zeroed, time_passed, &output);        
     } 
 }
 
