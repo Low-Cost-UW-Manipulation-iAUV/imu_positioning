@@ -62,6 +62,7 @@ bool calibration::is_calibration_done(void) {
     if ( (current_position + 1) >= num_of_samples) {
         offset = mean(stored_data);
         standard_deviation = std2(stored_data, offset);   
+        variance = pow(standard_deviation,2);
         deadband = standard_deviation * deadband_multiplier;        
      return true;   
     } 
@@ -81,6 +82,10 @@ double calibration::get_offset(void) {
 
 double calibration::get_std_dev(void) {
     return standard_deviation;
+}
+
+double calibration::get_variance(void) {
+    return variance;
 }
 
 double calibration::get_deadband(void) {

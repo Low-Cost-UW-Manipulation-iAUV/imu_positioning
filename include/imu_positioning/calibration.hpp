@@ -27,6 +27,8 @@ class calibration {
         double get_deadband(void);
         double get_offset(void);
         double get_std_dev(void);
+        double get_variance(void);
+
 
 
     private:
@@ -41,6 +43,7 @@ class calibration {
 
         double offset;
         double standard_deviation;
+        double variance;
         double deadband;
         int num_of_samples;
 };
