@@ -4,7 +4,7 @@
 #include "ros/ros.h"
 // Messages needed. FIXME remove the bottom two if they aren't needed, which I suspect.
 //#include "sensor_msgs/Imu.h"
-//#include "geometry_msgs/Vector3.h"
+#include "geometry_msgs/TwistWithCovarianceStamped.h"
 
 namespace imu_positioning {
 
@@ -35,11 +35,8 @@ xsens::xsens(const ros::NodeHandle &nh ) {
     z_calibrated = false;
     counter = 0;
 
-    pubber = nh_.advertise<geometry_msgs::Vector3>("imu/position", 1000);
-    pubber_dbed = nh_.advertise<geometry_msgs::Vector3>("imu/deadbanded", 1000);
-    pubber_vel = nh_.advertise<geometry_msgs::Vector3>("imu/velocity", 1000);
-    pubber_vel_zeroed = nh_.advertise<geometry_msgs::Vector3>("imu/velocity_zeroed", 1000);
-
+    pubber = nh_.advertise<geometry_msgs::TwistWithCovarianceStamped>("xsens/velocity", 1000);
+    
 
     reset_integration_service = nh_.advertiseService("reset_integration", &xsens::reset_integration, this);
     sub_imu = nh_.subscribe<sensor_msgs::Imu>("imu/data",1, &xsens::imu_callback, this);
@@ -49,20 +46,13 @@ xsens::xsens(const ros::NodeHandle &nh ) {
 xsens::~xsens() {}
 void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
     // create the empty message
-    geometry_msgs::Vector3 send_me;
-
-    geometry_msgs::Vector3 send_me_dbed;
-    geometry_msgs::Vector3 send_me_vel;
-    geometry_msgs::Vector3 send_me_vel_zeroed;
+    geometry_msgs::TwistWithCovarianceStamped send_me;
 
     // if the axis is calibrated just integrate.
     if(x_calibrated == true) {
         integrate_x.put_in(message->linear_acceleration.x, message->header.seq);
         // fill the message.
-        send_me.x = integrate_x.get_out();
-        send_me_dbed.x = integrate_x.get_out_deadbanded();
-        send_me_vel.x = integrate_x.get_out_velocity();
-        send_me_vel_zeroed.x = integrate_x.get_out_velocity_zero_detect();
+        send_me.twist.twist.linear.x = integrate_x.get_out_velocity_zero_detect();
     } else { //if not calibrate...
     ROS_INFO("imu_positioning - xsens: calibration sample %u", counter);
 
@@ -80,10 +70,8 @@ void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
     if(y_calibrated == true) {
         integrate_y.put_in(message->linear_acceleration.y, message->header.seq);
         // fill the message.
-        send_me.y = integrate_y.get_out();
-        send_me_dbed.y = integrate_y.get_out_deadbanded();
-        send_me_vel.y = integrate_y.get_out_velocity();
-        send_me_vel_zeroed.y = integrate_y.get_out_velocity_zero_detect();        
+        send_me.twist.twist.linear.y = integrate_y.get_out_velocity_zero_detect();
+       
     } else { //if not calibrate...
 
         calibration_y.put_in(message->linear_acceleration.y);
@@ -99,10 +87,8 @@ void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
     if(z_calibrated == true) {
         integrate_z.put_in(message->linear_acceleration.z, message->header.seq);
         // fill the message.
-        send_me.z = integrate_z.get_out();
-        send_me_dbed.z = integrate_z.get_out_deadbanded();
-        send_me_vel.z = integrate_z.get_out_velocity();
-        send_me_vel_zeroed.z = integrate_z.get_out_velocity_zero_detect();          
+        send_me.twist.twist.linear.z = integrate_z.get_out_velocity_zero_detect();
+       
     } else { //if not calibrate...
 
         calibration_z.put_in(message->linear_acceleration.z);
@@ -118,11 +104,10 @@ void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
         counter ++;
         // send the message off if any of them is calibrated...
         if (z_calibrated || y_calibrated || x_calibrated) {
+            send_me.header.seq = message->header.seq;
+            send_me.header.stamp = ros::Time::now();
+            send_me.header.frame_id = "/odom";            
             pubber.publish(send_me);
-            pubber_dbed.publish(send_me_dbed);
-            pubber_vel.publish(send_me_vel);
-            pubber_vel_zeroed.publish(send_me_vel_zeroed);
-
         }
 }
 bool xsens::reset_integration(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res) {
