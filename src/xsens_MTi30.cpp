@@ -108,7 +108,7 @@ void xsens::imu_callback(const sensor_msgs::Imu::ConstPtr& message) {
             send_me.header.stamp = ros::Time::now();
             send_me.header.frame_id = "xsens";
             send_me.twist.covariance.fill(0.0);
-            send_me.twist.covariance[1] = calibration_x.get_variance();
+            send_me.twist.covariance[0] = calibration_x.get_variance();
             send_me.twist.covariance[7] = calibration_y.get_variance();
             send_me.twist.covariance[14] = calibration_z.get_variance();
 
