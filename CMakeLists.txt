@@ -25,12 +25,12 @@ generate_messages(
 ## Declare a catkin package
 catkin_package(
 	CATKIN_DEPENDS 
-	message_runtime
-	roscpp
-	std_msgs
-	std_srvs
-	sensor_msgs
-	geometry_msgs
+		message_runtime
+		roscpp
+		std_msgs
+		std_srvs
+		sensor_msgs
+		geometry_msgs
 
 	INCLUDE_DIRS include
 )

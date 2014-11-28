@@ -10,7 +10,6 @@
 
 #include "ros/ros.h"
 
-#include "imu_positioning/xsens_MTi.h"
 #include "imu_positioning/sensor_integration.hpp"
 #include "imu_positioning/calibration.hpp"
 #include "sensor_msgs/Imu.h"
