@@ -1,0 +1,5 @@
+<!--Arguments are : device_address1 device_address2 desired_baud range(m) numberofbins speed_of_sound  -->
+
+<launch>
+  	<node name="imu_position" pkg="imu_positioning" type="xsens" output="screen" />
+</launch>
